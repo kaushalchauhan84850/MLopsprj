@@ -1,0 +1,26 @@
+# Helm values for grafana/loki (single-binary mode, no dependencies)
+# install: helm upgrade --install loki grafana/loki -n monitoring -f k8s/monitoring/loki-values.yaml
+deploymentMode: SingleBinary
+
+loki:
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+  compactorAddress: same-cluster # let defaults resolve in single-binary mode
+
+singleBinary:
+  replicas: 1
+
+gateway:
+  enabled: false # query Loki directly at loki.monitoring.svc:3100
+
+monitoring:
+  selfMonitoring:
+    enabled: false
+  lokiCanary:
+    enabled: false
+  rules:
+    enabled: false
+test:
+  enabled: false

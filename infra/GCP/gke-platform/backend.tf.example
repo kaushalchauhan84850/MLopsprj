@@ -1,0 +1,17 @@
+# OPTIONAL: remote state in Cloud Storage. Rename to backend.tf to enable.
+#
+# Create the bucket OUTSIDE this configuration (it must outlive terraform
+# destroy, otherwise destroy would delete its own state):
+#
+#   gcloud storage buckets create gs://MY-TFSTATE-BUCKET \
+#     --project MY_PROJECT --location us-east1 --uniform-bucket-level-access
+#   gcloud storage buckets update gs://MY-TFSTATE-BUCKET --versioning
+#
+# Then run: terraform init -migrate-state
+
+terraform {
+  backend "gcs" {
+    bucket = "MY-TFSTATE-BUCKET"
+    prefix = "gke-platform"
+  }
+}

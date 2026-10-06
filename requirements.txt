@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+prometheus-client
+requests
+redis
+pandas
+numpy
+scikit-learn
+joblib
+pyarrow
+kubernetes

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen
+  namespace: demo
+  labels:
+    app: loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: loadgen}
+  template:
+    metadata:
+      labels: {app: loadgen}
+    spec:
+      containers:
+        - name: loadgen
+          image: k8s-ai-ops:dev
+          args: ["src.loadgen.main"]
+          env:
+            - {name: TARGET, value: "http://demo-app.demo.svc:8080"}
+            - {name: RPS, value: "25"}
+            - {name: THREADS, value: "4"}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 250m, memory: 128Mi}

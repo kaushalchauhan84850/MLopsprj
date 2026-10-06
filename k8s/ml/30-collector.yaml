@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-collector
+  namespace: ai-ops
+  labels:
+    app.kubernetes.io/name: ai-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ai-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ai-collector
+    spec:
+      containers:
+        - name: collector
+          image: k8s-ai-ops:dev
+          args: ["src.collector.main"]
+          ports: [{containerPort: 8080, name: http}]
+          envFrom:
+            - configMapRef: {name: ai-ops-config}
+            - secretRef: {name: ai-ops-secrets}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: 500m, memory: 768Mi}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: ai-ops-data}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-collector
+  namespace: ai-ops
+  labels:
+    app.kubernetes.io/name: ai-collector
+spec:
+  selector:
+    app.kubernetes.io/name: ai-collector
+  ports: [{port: 8080, name: http}]
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-collector
+  namespace: ai-ops
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ai-collector
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

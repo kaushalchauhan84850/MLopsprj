@@ -1,0 +1,66 @@
+# Replicas are managed by KEDA (k8s/keda/scaledobjects.yaml) based on the
+# analysis queue depth; minReplicaCount keeps the webhook always available.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-analyzer
+  namespace: ai-ops
+  labels:
+    app.kubernetes.io/name: ai-analyzer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ai-analyzer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ai-analyzer
+    spec:
+      serviceAccountName: ai-analyzer
+      containers:
+        - name: analyzer
+          image: k8s-ai-ops:dev
+          args: ["src.analyzer.main"]
+          ports: [{containerPort: 8080, name: http}]
+          envFrom:
+            - configMapRef: {name: ai-ops-config}
+            - secretRef: {name: ai-ops-secrets}
+          volumeMounts:
+            - {name: data, mountPath: /data, readOnly: true}
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: 500m, memory: 768Mi}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: ai-ops-data}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-analyzer
+  namespace: ai-ops
+  labels:
+    app.kubernetes.io/name: ai-analyzer
+spec:
+  selector:
+    app.kubernetes.io/name: ai-analyzer
+  ports: [{port: 8080, name: http}]
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-analyzer
+  namespace: ai-ops
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ai-analyzer
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

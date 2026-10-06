@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars and edit.
+#   cp terraform.tfvars.example terraform.tfvars
+
+# REQUIRED. Your public IP (find it with: curl -s https://checkip.amazonaws.com)
+api_allowed_cidrs = ["203.0.113.10/32"]
+
+# Optional overrides (defaults shown)
+# region             = "us-east-1"
+# cluster_name       = "heavy-cluster"
+# kubernetes_version = "1.36"
+# node_instance_type = "m6i.2xlarge"
+# node_count         = 3
+# node_disk_size_gb  = 100

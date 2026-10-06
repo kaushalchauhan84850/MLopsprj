@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars and edit. terraform.tfvars is git-ignored, and the
+# scripts in scripts/ read their settings from it.
+
+project_id   = "my-gcp-project-id"
+region       = "us-east1"
+zone         = "us-east1-b"
+cluster_name = "gke-jobs"
+environment  = "dev"
+
+node_count     = 3
+machine_type   = "e2-standard-2"
+use_spot_nodes = false
+
+# Restrict API access to your own IP. Find it with: curl -s ifconfig.me
+authorized_networks = [
+  {
+    cidr_block   = "203.0.113.10/32"
+    display_name = "my-laptop"
+  },
+]

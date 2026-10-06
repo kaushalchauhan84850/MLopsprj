@@ -1,0 +1,42 @@
+# KEDA event-driven autoscaling driven by Prometheus queries.
+# 1. ai-analyzer: scale by analysis-queue depth (backpressure-aware ML serving)
+# 2. demo-app:    scale by real request rate (no HPA needed)
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ai-analyzer
+  namespace: ai-ops
+spec:
+  scaleTargetRef:
+    name: ai-analyzer
+  minReplicaCount: 1
+  maxReplicaCount: 6
+  cooldownPeriod: 120
+  pollingInterval: 15
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
+        metricName: monitor_windows_pending
+        query: max(monitor_windows_pending) or vector(0)
+        threshold: "25"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: demo-app
+  namespace: demo
+spec:
+  scaleTargetRef:
+    name: demo-app
+  minReplicaCount: 1
+  maxReplicaCount: 8
+  cooldownPeriod: 120
+  pollingInterval: 15
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
+        metricName: http_requests_per_second
+        query: sum(rate(http_requests_total{namespace="demo", service="demo-app"}[2m])) or vector(0)
+        threshold: "40"

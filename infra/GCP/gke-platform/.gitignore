@@ -1,0 +1,13 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+tfplan
+*.tfplan
+terraform.tfvars
+*.auto.tfvars
+override.tf
+override.tf.json
+
+# Keep the lock file in git:  !.terraform.lock.hcl

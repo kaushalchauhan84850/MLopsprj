@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+  namespace: demo
+  labels:
+    app.kubernetes.io/name: demo-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: demo-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: demo-app
+    spec:
+      containers:
+        - name: demo-app
+          image: demo-app:dev
+          env:
+            - {name: ERROR_RATE, value: "0.03"}
+            - {name: BASE_LATENCY_MS, value: "40"}
+          ports: [{containerPort: 8080, name: http}]
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            initialDelaySeconds: 3
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            initialDelaySeconds: 5
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi} # /burn above 256Mi demos an OOMKill
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app
+  namespace: demo
+  labels:
+    app.kubernetes.io/name: demo-app
+spec:
+  selector:
+    app.kubernetes.io/name: demo-app
+  ports: [{port: 8080, name: http}]
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: demo-app
+  namespace: demo
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: demo-app
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

@@ -1,0 +1,55 @@
+# Tunables for the ML pipeline. Change values and `kubectl apply` again —
+# pods pick them up on restart (envFrom).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-ops-config
+  namespace: ai-ops
+data:
+  COLLECT_INTERVAL: "60"
+  PREDICTION_HORIZON_MIN: "15"
+  ANOMALY_QUANTILE: "0.98"
+  WORKER_THREADS: "2"
+  ALERT_TTL_MIN: "30"
+  ALERT_DEDUP_MIN: "15"
+  DEFAULT_P_THRESH: "0.85"
+---
+# Set your Slack incoming-webhook URL here (kubectl edit secret ai-ops-secrets -n ai-ops)
+# or: kubectl -n ai-ops create secret generic ai-ops-secrets --from-literal=SLACK_WEBHOOK_URL=https://hooks.slack.com/...  --dry-run=client -o yaml | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-ops-secrets
+  namespace: ai-ops
+type: Opaque
+stringData:
+  SLACK_WEBHOOK_URL: ""
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ai-analyzer
+  namespace: ai-ops
+---
+# Read-only access so the analyzer can pull Kubernetes events for RCA reports.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ai-analyzer-read
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "events", "nodes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ai-analyzer-read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ai-analyzer-read
+subjects:
+  - kind: ServiceAccount
+    name: ai-analyzer
+    namespace: ai-ops

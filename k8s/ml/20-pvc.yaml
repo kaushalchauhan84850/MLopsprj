@@ -1,0 +1,14 @@
+# Shared volume: parquet feature history (collector writes) + trained model
+# artifacts (trainer writes, analyzer reads). Uses the cluster default
+# StorageClass. NOTE: ReadWriteOnce ties all writers to one node — for a
+# multi-node cluster switch to a ReadWriteMany class (NFS/EFS/CephFS).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-ops-data
+  namespace: ai-ops
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi

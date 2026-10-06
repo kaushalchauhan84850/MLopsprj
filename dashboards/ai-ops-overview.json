@@ -1,0 +1,120 @@
+{
+  "title": "AI Ops — Cluster & App Health",
+  "uid": "ai-ops-overview",
+  "tags": ["ai-ops"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROM",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Model age (s)",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 21600 }, { "color": "red", "value": 86400 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [ { "refId": "A", "expr": "max(monitor_model_age_seconds)" } ]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Windows pending analysis",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 50 }, { "color": "red", "value": 200 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [ { "refId": "A", "expr": "max(monitor_windows_pending)" } ]
+    },
+    {
+      "id": 3, "type": "stat", "title": "AI alerts sent (1h)",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 10 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [ { "refId": "A", "expr": "sum(increase(monitor_alerts_sent_total[1h]))" } ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Node CPU %",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "percent", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "100 * (1 - avg by (node) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "legendFormat": "{{node}}" } ]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Node Memory %",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "percent", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "{{instance}}" } ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Container restarts (15m) by namespace",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 4 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "sum by (namespace) (increase(kube_pod_container_status_restarts_total[15m]))", "legendFormat": "{{namespace}}" } ]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Pods Not Ready",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 12 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "sum by (namespace) (kube_pod_status_ready{condition=\"false\"})", "legendFormat": "{{namespace}}" } ]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Demo app RPS by status",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 12 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "sum by (status) (rate(http_requests_total{namespace=\"demo\"}[2m]))", "legendFormat": "{{status}}" } ]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Demo app p95 latency",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 12 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"demo\"}[2m])))", "legendFormat": "p95" } ]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "5xx rate by service",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 20 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "sum by (namespace, service) (rate(http_requests_total{status=~\"5..\"}[2m]))", "legendFormat": "{{namespace}}/{{service}}" } ]
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "AI anomaly score (top 10 entities)",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 12, "x": 8, "y": 20 },
+      "fieldConfig": { "defaults": { "min": 0, "max": 1, "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "topk(10, max by (entity) (monitor_anomaly_score))", "legendFormat": "{{entity}}" } ]
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "AI predicted failure risk (top 10 entities)",
+      "datasource": { "type": "prometheus", "uid": "$DS_PROM" },
+      "gridPos": { "h": 8, "w": 4, "x": 20, "y": 20 },
+      "fieldConfig": { "defaults": { "min": 0, "max": 1, "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "expr": "topk(10, max by (entity) (monitor_failure_risk))", "legendFormat": "{{entity}}" } ]
+    }
+  ]
+}
