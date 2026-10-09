@@ -35,7 +35,7 @@ variable "vpc_cidr" {
 variable "node_instance_type" {
   description = "EC2 instance type for the worker nodes"
   type        = string
-  default     = "m6i.2xlarge" # 8 vCPU / 32 GB. Use c7i.* for CPU-heavy or r7i.* for memory-heavy jobs.
+  default     = "t3.large" # 2 vCPU / 8 GB, burstable. For heavier jobs use m6i.2xlarge, c7i.* (CPU) or r7i.* (memory).
 }
 
 variable "node_count" {

@@ -4,12 +4,12 @@
 # (and therefore leaves a half-built cluster to clean up).
 #
 # Env (defaults match variables.tf):
-#   AWS_REGION=us-east-1  NODE_INSTANCE_TYPE=m6i.2xlarge  NODE_COUNT=3
+#   AWS_REGION=us-east-1  NODE_INSTANCE_TYPE=t3.large  NODE_COUNT=3
 
 set -uo pipefail
 
 AWS_REGION="${AWS_REGION:-us-east-1}"
-NODE_INSTANCE_TYPE="${NODE_INSTANCE_TYPE:-m6i.2xlarge}"
+NODE_INSTANCE_TYPE="${NODE_INSTANCE_TYPE:-t3.large}"
 NODE_COUNT="${NODE_COUNT:-3}"
 export AWS_DEFAULT_REGION="$AWS_REGION" AWS_PAGER=""
 

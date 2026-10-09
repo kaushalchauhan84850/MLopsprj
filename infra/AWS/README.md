@@ -4,7 +4,7 @@ Terraform project that creates:
 
 - a **VPC** (3 private + 3 public subnets across 3 availability zones, 1 NAT gateway)
 - an **EKS control plane** (the "master" node, run and scaled by AWS, not an EC2 instance you manage)
-- a **managed node group** of **3 EC2 worker nodes** (default `m6i.2xlarge`, 8 vCPU / 32 GB each)
+- a **managed node group** of **3 EC2 worker nodes** (default `t3.large`, 2 vCPU / 8 GB each)
 
 It is built so that `terraform destroy` removes everything, including the load
 balancers, volumes and network interfaces that Kubernetes creates behind
@@ -98,7 +98,7 @@ All options:
 | `region` | `us-east-1` | AWS region |
 | `cluster_name` | `heavy-cluster` | Cluster name, also the `Project` tag on every resource |
 | `kubernetes_version` | `1.36` | Use a version still in standard support (see the [EKS version calendar](https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html)) |
-| `node_instance_type` | `m6i.2xlarge` | `c7i.*` for CPU-heavy, `r7i.*` for memory-heavy jobs |
+| `node_instance_type` | `t3.large` | Use `m6i.*`, `c7i.*` (CPU-heavy) or `r7i.*` (memory-heavy) for heavier jobs |
 | `node_count` | `3` | Number of worker nodes |
 | `node_disk_size_gb` | `100` | Root volume per node |
 | `vpc_cidr` | `10.0.0.0/16` | VPC address range |
@@ -126,7 +126,7 @@ terraform apply
 If preflight reports that your vCPU quota is too low, request an increase in
 **Service Quotas > Amazon EC2 > Running On-Demand Standard instances**
 (quota code `L-1216C47A`), or choose a smaller `node_instance_type` or
-`node_count`. Three `m6i.2xlarge` nodes need 24 vCPUs.
+`node_count`. Three `t3.large` nodes need 6 vCPUs.
 
 ---
 
@@ -254,7 +254,7 @@ every step is safe to repeat.
 ## 10. Cost while running (approximate, us-east-1)
 
 - EKS control plane: about **$0.10/hour**
-- 3 x `m6i.2xlarge` On-Demand: about **$0.38/hour each**
+- 3 x `t3.large` On-Demand: about **$0.08/hour each**
 - NAT gateway: about **$0.045/hour** plus data processing
 - EBS volumes (3 x 100 GB gp3) and any load balancers or volumes your jobs create
 
